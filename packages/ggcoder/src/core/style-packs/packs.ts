@@ -18,17 +18,17 @@ import type { LanguageId } from "../language-detector.js";
 export const PACKS: Readonly<Record<LanguageId, string>> = {
   typescript: `### TypeScript
 
-- **Tooling.** \`tsc --strict\` always. Enable \`noUncheckedIndexedAccess\`, \`exactOptionalPropertyTypes\`, \`noImplicitOverride\`. Prettier + \`@typescript-eslint/strict-type-checked\`.
-- **Types.** Explicit return types on every exported function and async function. Inference is fine inside function bodies. Never use \`any\`. Never use \`as\` casts except \`as const\`. Never use the non-null \`!\` operator. Ban the \`Function\` type and \`Object\` type.
+- **Tooling.** \`tsc --strict\` always. Enable \`noUncheckedIndexedAccess\`, \`exactOptionalPropertyTypes\`, \`noImplicitOverride\`. **Biome** (single Rust binary — format + lint) as the default for new projects; fall back to Prettier + \`@typescript-eslint/strict-type-checked\` only when Biome's rule coverage is insufficient. Don't run both in one project.
+- **Types.** Explicit return types on every exported function and async function. Inference is fine inside function bodies. Never use \`any\`. Prefer \`satisfies\` over \`as\` for narrowing literal-typed values; reserve \`as\` for genuinely unavoidable casts (and \`as const\`). Never use the non-null \`!\` operator. Branded types (\`type UserId = string & { __brand: "UserId" }\`) for domain primitives. Ban the \`Function\` type and \`Object\` type.
 - **Data.** Validate every external boundary (HTTP, env, file, IPC) with Zod or Valibot. Never trust untyped JSON. Discriminated unions over class hierarchies. \`Readonly<T>\` for immutable shapes.
-- **Errors.** Use \`Result<T, E>\` (e.g. \`neverthrow\`) for expected failures — network errors, validation failures, missing records. Reserve \`throw\` for truly unrecoverable bugs (impossible states, assertion failures). Never throw for control flow.
+- **Errors.** Zero-dep discriminated-union returns for expected failures: \`type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }\`. Type-narrowable, no runtime dependency, model-friendly. Reserve \`throw\` for truly unrecoverable bugs (impossible states, assertion failures). Never throw for control flow.
 - **Modules.** Named exports only — no \`export default\`. One concept per file. No barrel files (\`index.ts\` re-exports). Feature folders (\`users/\`), not layer folders (\`controllers/services/repos/\`).
-- **Async.** \`async/await\` only — no \`.then\` chains. Always await or explicitly return promises. No floating promises.
+- **Async.** \`async/await\` only — no \`.then\` chains. Always await or explicitly return promises. No floating promises. Pass \`AbortSignal\` through every async function that does I/O or long work; respect it.
 - **Avoid.** \`enum\` (use \`as const\` objects + \`typeof\` unions). Class inheritance beyond one level. \`namespace\`. Decorators outside framework-required slots. Conditional/mapped types in app code (keep in \`types.ts\` if unavoidable).`,
 
   javascript: `### JavaScript
 
-- **Tooling.** ESM only (\`"type": "module"\`). Prettier + ESLint with \`eslint:recommended\` and \`eslint-plugin-import\`. If types matter at all, use TypeScript instead of JSDoc.
+- **Tooling.** ESM only (\`"type": "module"\`). **Biome** (single Rust binary — format + lint) as the default for new projects; or Prettier + ESLint with \`eslint:recommended\` and \`eslint-plugin-import\`. Don't run both in one project. If types matter at all, use TypeScript instead of JSDoc.
 - **Types.** If you must stay on JS, annotate exported functions with JSDoc \`@param\`/\`@returns\` so the LSP can infer. Otherwise treat the project as untyped and validate aggressively at boundaries.
 - **Data.** Validate every external boundary with Zod. Use plain objects + factory functions, not classes, for data shapes. \`Object.freeze\` for constants.
 - **Errors.** Return \`{ ok: true, value } | { ok: false, error }\` discriminated objects for expected failures. \`throw\` only for unrecoverable bugs. Always handle promise rejections.
@@ -52,6 +52,7 @@ export const PACKS: Readonly<Record<LanguageId, string>> = {
 - **Errors.** \`if err != nil { return fmt.Errorf("doing X: %w", err) }\` — wrap with context at every layer. Define sentinel errors as \`var ErrXxx = errors.New("xxx")\` at package level. Use \`errors.Is\`/\`errors.As\` for matching. Never \`panic\` outside \`init\` or truly impossible states.
 - **Types.** Small interfaces defined at the consumer, not the producer (\`io.Reader\`-style, 1-3 methods). Accept interfaces, return structs. No empty interface \`any\` except at adapter boundaries.
 - **Concurrency.** \`context.Context\` is the first parameter on every I/O or long-running function — always propagate, never \`context.Background()\` deep in a call chain. Goroutines launched only with clear lifecycle ownership (\`errgroup\`, \`sync.WaitGroup\`, or paired \`done\` channel).
+- **Logging.** \`log/slog\` (stdlib, Go 1.21+) for structured logging — never \`log\`, \`fmt.Println\`, or third-party loggers in new code. Pass a \`*slog.Logger\` via context or as a struct field on services. Use \`slog.With(...)\` to attach request-scoped attrs.
 - **Structure.** Flat package layout by feature (\`user/\`, \`order/\`), not by layer. \`cmd/<binary>/main.go\` for executables. \`internal/\` for packages not meant to be imported externally. No \`utils\` or \`common\` packages.
 - **Generics.** Use only when they remove real duplication. Concrete types are the default.
 - **Avoid.** \`init()\` functions with side effects. Global mutable state. Returning bare \`error\` without wrapping context. Naked returns in functions longer than 5 lines. \`interface{}\` in new code.`,

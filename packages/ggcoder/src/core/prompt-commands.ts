@@ -892,11 +892,11 @@ Report which are present, missing, or configured below the pack's strictness rec
 
 ### 5. Style pack alignment
 
-"Active style packs" refers specifically to the **Language Style Packs** section in your system prompt (e.g. TypeScript, Python, Go). It does **NOT** include Skills (\`.gg/skills/\`) or any other extension category. If the Language Style Packs section is absent or empty, **skip this entire section entirely** — do not substitute Skills or any other concept.
+"Active style packs" refers specifically to the per-language sub-sections inside the **Language Style Packs** section in your system prompt (e.g. \`### TypeScript\`, \`### Python\`, \`### Go\`). It does **NOT** include the cross-cutting \`### Agent-Written Code\` preamble that sits above them — those are guidelines for how code is *written*, not project-scaffolding to audit. It also does **NOT** include Skills (\`.gg/skills/\`) or any other extension category. If the Language Style Packs section is absent or empty, **skip this entire section entirely** — do not substitute Skills or any other concept.
 
-When Language Style Packs are present, compare the project against each pack's **Tooling** bullet and the system prompt's **Verification** commands:
-- Tooling: which strict-mode flags or lint-rule presets does the pack recommend that the project is missing? (e.g. \`tsconfig\` missing \`noUncheckedIndexedAccess\`, \`pyproject\` missing \`[tool.ruff]\`).
-- Dependencies: list which pack-mentioned libs (Zod, neverthrow, Pydantic, thiserror, etc.) the project uses, has an equivalent for, or lacks. **Observation only — no recommendation to install.**
+When per-language packs are present, compare the project against each pack's **Tooling** bullet and the system prompt's **Verification** commands:
+- Tooling: which strict-mode flags or lint-rule presets does the pack recommend that the project is missing? (e.g. \`tsconfig\` missing \`noUncheckedIndexedAccess\`, \`pyproject\` missing \`[tool.ruff]\`, Go project missing \`golangci-lint\` config).
+- Dependencies: list which pack-mentioned libs (Zod, Pydantic, thiserror, anyhow, etc.) the project uses, has an equivalent for, or lacks. **Observation only — no recommendation to install.**
 
 ### 6. Documentation hygiene
 
