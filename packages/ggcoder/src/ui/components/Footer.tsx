@@ -49,7 +49,6 @@ const MODEL_SHORT_NAMES: Record<string, string> = {
   "gpt-5.4": "GPT-5.4",
   "gpt-5.4-mini": "GPT-5.4 Mini",
   "gpt-5.3-codex": "GPT-5.3 Codex",
-  "codex-mini-latest": "Codex Mini",
 };
 
 function getShortModelName(model: string): string {
