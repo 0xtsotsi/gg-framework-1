@@ -24,5 +24,10 @@
     "onlyBuiltDependencies": [
       "onnxruntime-node"
     ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
+    "openai": "^6.37.0",
+    "zod": "^4.4.3"
   }
 }
