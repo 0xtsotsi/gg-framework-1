@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { StateManager } from "./state.js";
 
 // Mock fs module — in Node environment we test the class logic
@@ -6,6 +6,11 @@ import { StateManager } from "./state.js";
 vi.mock("node:fs/promises", async () => {
   const fs = await vi.importActual("node:fs/promises");
   return fs;
+});
+
+// Reset singletons between tests to prevent state leakage
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("StateManager", () => {

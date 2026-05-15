@@ -17,7 +17,11 @@ const DEFAULT_STATE: SyncState = {
 };
 
 export class StateManager {
-  private state: SyncState = { ...DEFAULT_STATE };
+  private state: SyncState = {
+    cursors: {},
+    lastFullSyncAt: DEFAULT_STATE.lastFullSyncAt,
+    agentMemory: {},
+  };
   private loaded = false;
   private dirty = false;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
