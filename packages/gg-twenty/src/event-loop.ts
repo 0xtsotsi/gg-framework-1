@@ -187,6 +187,12 @@ export class GGTwentyEventLoop {
       clearInterval(this.statsInterval);
       this.statsInterval = null;
     }
+    // Sync updated cursors from polling engine to state before saving
+    const pollingState = this.polling.getState();
+    for (const [module, cursor] of Object.entries(pollingState)) {
+      this.state.updateCursor(module, cursor);
+    }
+
     await this.twenty.disconnect();
     await this.state.save();
     log("info", "loop", "gg-twenty stopped");

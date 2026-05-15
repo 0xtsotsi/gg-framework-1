@@ -157,33 +157,33 @@ export class TwentyPollingEngine {
 
       // Emit events for handlers
       const handlers = this.handlers.get(module) ?? [];
-      for (const record of records) {
-        if (handlers.length === 0) continue;
+      if (handlers.length > 0) {
+        for (const record of records) {
+          const event: TwentyEvent = {
+            module,
+            action: record.createdAt === record.updatedAt ? "created" : "updated",
+            record,
+            timestamp: new Date().toISOString(),
+          };
 
-        const event: TwentyEvent = {
-          module,
-          action: record.createdAt === record.updatedAt ? "created" : "updated",
-          record,
-          timestamp: new Date().toISOString(),
-        };
+          // Skip already-processed records using lastProcessedId
+          const recordId = String(record.id ?? "");
+          if (cursor.lastProcessedId && cursor.lastProcessedId === recordId) {
+            continue;
+          }
 
-        // Skip already-processed records using lastProcessedId
-        const recordId = String(record.id ?? "");
-        if (cursor.lastProcessedId && cursor.lastProcessedId === recordId) {
-          continue;
-        }
+          cursor.processedCount++;
+          cursor.lastProcessedId = recordId;
 
-        cursor.processedCount++;
-        cursor.lastProcessedId = recordId;
-
-        for (const handler of handlers) {
-          try {
-            await handler(event);
-          } catch (err) {
-            log("error", "polling", `Handler error for ${module}`, {
-              recordId,
-              error: String(err),
-            });
+          for (const handler of handlers) {
+            try {
+              await handler(event);
+            } catch (err) {
+              log("error", "polling", `Handler error for ${module}`, {
+                recordId,
+                error: String(err),
+              });
+            }
           }
         }
       }
