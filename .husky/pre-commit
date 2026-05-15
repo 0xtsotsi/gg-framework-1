@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "Running pre-commit checks..."
+# Typecheck: run on stable packages only (gg-twenty has pre-existing TS errors)
+pnpm --filter '@kenkaiiii/gg-ai' check && \
+pnpm --filter '@kenkaiiii/gg-agent' check && \
+pnpm --filter '@kenkaiiii/ggcoder' check && \
+# Format check: exclude gg-twenty (has pre-existing lint/type errors — fix before enabling)
+npx prettier --check --ignore-path .prettierignore packages/gg-ai/src packages/gg-agent/src packages/ggcoder/src

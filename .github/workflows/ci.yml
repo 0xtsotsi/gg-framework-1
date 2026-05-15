@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter '@kenkaiiii/gg-ai' check
+      - run: pnpm --filter '@kenkaiiii/gg-agent' check
+      - run: pnpm --filter '@kenkaiiii/ggcoder' check
+      - run: npx prettier --check --ignore-path .prettierignore packages/gg-ai/src packages/gg-agent/src packages/ggcoder/src
+      - run: pnpm --filter '@kenkaiiii/gg-ai' test
+      - run: pnpm --filter '@kenkaiiii/gg-agent' test
+      - run: pnpm --filter '@kenkaiiii/ggcoder' test
