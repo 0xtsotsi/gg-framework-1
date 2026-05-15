@@ -1,6 +1,8 @@
 node_modules/
 dist/
 *.tgz
+*.tsbuildinfo
+*.buildinfo
 
 # Auth & secrets
 .env

@@ -28,10 +28,12 @@ export interface TwentyClient {
   createOpportunity(data: Record<string, unknown>): Promise<unknown>;
 }
 
+let requestId = 0;
+
 async function mcpRequest(method: string, params: Record<string, unknown>): Promise<unknown> {
   const body: JSONRPCRequest = {
     jsonrpc: "2.0",
-    id: Date.now(),
+    id: ++requestId,
     method,
     params,
   };

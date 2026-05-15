@@ -21,6 +21,7 @@ export class StateManager {
   private loaded = false;
   private dirty = false;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
+  private saving = false;
 
   async load(): Promise<SyncState> {
     if (this.loaded) return this.state;
@@ -39,7 +40,8 @@ export class StateManager {
   }
 
   async save(): Promise<void> {
-    if (!this.dirty) return;
+    if (!this.dirty || this.saving) return;
+    this.saving = true;
 
     try {
       await fs.mkdir(path.dirname(STATE_FILE), { recursive: true });
@@ -47,6 +49,8 @@ export class StateManager {
       this.dirty = false;
     } catch (err) {
       console.error("[gg-twenty][state] Failed to save state:", err);
+    } finally {
+      this.saving = false;
     }
   }
 

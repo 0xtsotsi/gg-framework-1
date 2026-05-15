@@ -37,6 +37,7 @@ export class TwentyPollingEngine {
   private cursors: Map<TwentyModule, ModuleCursor> = new Map();
   private intervalMs: number;
   private running = false;
+  private polling = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private activeModules: TwentyModule[];
 
@@ -116,10 +117,15 @@ export class TwentyPollingEngine {
    * Run a single poll cycle manually.
    */
   async poll(): Promise<void> {
-    if (!this.running) return;
+    if (!this.running || this.polling) return;
+    this.polling = true;
 
-    for (const module of this.activeModules) {
-      await this.pollModule(module);
+    try {
+      for (const module of this.activeModules) {
+        await this.pollModule(module);
+      }
+    } finally {
+      this.polling = false;
     }
   }
 
@@ -161,17 +167,14 @@ export class TwentyPollingEngine {
           timestamp: new Date().toISOString(),
         };
 
-        // Skip if we've already processed this record
+        // Skip already-processed records using lastProcessedId
         const recordId = String(record.id ?? "");
-        if (cursor.processedCount > 0 && event.action === "updated") {
-          // Only process new records, skip backfill
-          const _key = `${module}:${recordId}`;
-          if ((cursor as unknown as Record<string, unknown>)._lastProcessedId === recordId) {
-            continue;
-          }
+        if (cursor.lastProcessedId && cursor.lastProcessedId === recordId) {
+          continue;
         }
 
         cursor.processedCount++;
+        cursor.lastProcessedId = recordId;
 
         for (const handler of handlers) {
           try {

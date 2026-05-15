@@ -70,14 +70,17 @@ export async function executeCompoSAction(
   actionName: string,
   params: Record<string, unknown>,
 ): Promise<unknown> {
-  const res = await fetch(`${COMPOSIO_API_BASE}/actions/${actionName}/execute`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+  const res = await fetch(
+    `${COMPOSIO_API_BASE}/actions/${encodeURIComponent(actionName)}/execute`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ parameters: params }),
     },
-    body: JSON.stringify({ parameters: params }),
-  });
+  );
 
   if (!res.ok) {
     const err = await res.text();

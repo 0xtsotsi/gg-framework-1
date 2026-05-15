@@ -41,6 +41,14 @@ providerRegistry.register("moonshot", {
     }),
 });
 
+providerRegistry.register("openrouter", {
+  stream: (options) =>
+    streamOpenAI({
+      ...options,
+      baseUrl: options.baseUrl ?? "https://openrouter.ai/api/v1",
+    }),
+});
+
 // ── Public API ─────────────────────────────────────────────
 
 /**

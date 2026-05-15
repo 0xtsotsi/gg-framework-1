@@ -143,6 +143,8 @@ export class GGTwentyEventLoop {
     this.state.addToAgentMemory(response.module, response.recordId);
   }
 
+  private statsInterval: ReturnType<typeof setInterval> | null = null;
+
   async start(): Promise<void> {
     log("info", "loop", "Starting gg-twenty event loop...");
     log("info", "loop", `Twenty MCP: ${this.config.twentyMcpUrl}`);
@@ -165,7 +167,7 @@ export class GGTwentyEventLoop {
     this.polling.start();
 
     // Periodic stat logging every 5 minutes
-    setInterval(() => {
+    this.statsInterval = setInterval(() => {
       this.stats.uptimeSeconds = Math.floor((Date.now() - this.startTime) / 1000);
       log(
         "info",
@@ -181,6 +183,10 @@ export class GGTwentyEventLoop {
     log("info", "loop", "Stopping gg-twenty...");
     this.running = false;
     this.polling.stop();
+    if (this.statsInterval) {
+      clearInterval(this.statsInterval);
+      this.statsInterval = null;
+    }
     await this.twenty.disconnect();
     await this.state.save();
     log("info", "loop", "gg-twenty stopped");

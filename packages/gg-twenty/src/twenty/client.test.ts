@@ -8,12 +8,11 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 // ── Mock @modelcontextprotocol/sdk ──────────────────────────────────────────
 
 const mockCallTool = vi.fn<() => Promise<unknown>>();
-const mockListTools =
-  vi.fn<
-    () => Promise<{
-      tools: Array<{ name: string; description?: string; inputSchema: Record<string, unknown> }>;
-    }>
-  >();
+const mockListTools = vi.fn<
+  () => Promise<{
+    tools: Array<{ name: string; description?: string; inputSchema: Record<string, unknown> }>;
+  }>
+>();
 const mockClose = vi.fn<() => Promise<void>>();
 const mockConnect = vi.fn<() => Promise<void>>();
 

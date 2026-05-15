@@ -234,8 +234,9 @@ describe("FindInputSchema", () => {
     expect(result.filter).toEqual({ status: { eq: "todo" } });
   });
 
-  it("throws on missing serviceName", () => {
-    expect(() => FindInputSchema.parse({ objectName: "note" })).toThrow();
+  it("defaults serviceName to 'standard'", () => {
+    const result = FindInputSchema.parse({ objectName: "note" });
+    expect(result.serviceName).toBe("standard");
   });
 
   it("throws on missing objectName", () => {

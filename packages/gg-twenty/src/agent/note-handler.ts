@@ -8,7 +8,7 @@
  */
 
 import { agentLoop, type AgentTool, type AgentEvent } from "@kenkaiiii/gg-agent";
-import { streamOpenAI, providerRegistry, type Message } from "@kenkaiiii/gg-ai";
+import { streamOpenAI, providerRegistry, type Message, type Provider } from "@kenkaiiii/gg-ai";
 import type { TwentyMCPClient } from "../twenty/client.js";
 import type { TwentyEvent, GGTwentyConfig, AgentResponse } from "../twenty/types.js";
 import { log } from "../twenty/logger.js";
@@ -120,11 +120,13 @@ export async function handleNoteEvent(
     },
   ];
 
-  // Run the agent loop
+  // Parse model: format is "provider/model/path" where provider is openrouter/anthropic/etc
+  // For OpenRouter: "openrouter/openai/gpt-4o-mini" → provider=openrouter, modelId=openai/gpt-4o-mini
   const model = config.fastModel ?? config.model ?? "openrouter/openai/gpt-4o-mini";
-  const [providerPart, modelPart] = model.split("/");
-  const provider = providerPart as Parameters<typeof providerRegistry.get>[0];
-  const modelId = modelPart ?? model;
+  const slashIdx = model.indexOf("/");
+  const providerPart = slashIdx > 0 ? model.slice(0, slashIdx) : model;
+  const modelId = slashIdx > 0 ? model.slice(slashIdx + 1) : model;
+  const provider = providerPart as Provider;
 
   try {
     // Register OpenRouter if not already

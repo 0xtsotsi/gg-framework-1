@@ -79,7 +79,7 @@ export const WorkflowSchema = z.object({
 // ── MCP Tool Input Schemas ───────────────────────────────────
 
 export const FindInputSchema = z.object({
-  serviceName: z.string(),
+  serviceName: z.string().optional().default("standard"),
   objectName: z.string(),
   filter: z.record(z.string(), z.unknown()).optional(),
   orderBy: z.record(z.string(), z.string()).optional(),
@@ -100,6 +100,7 @@ export interface ModuleCursor {
   lastCursor: string | null;
   lastPolledAt: string;
   processedCount: number;
+  lastProcessedId?: string; // Track last processed record ID to avoid duplicates
 }
 
 export interface SyncState {

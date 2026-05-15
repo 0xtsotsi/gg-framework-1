@@ -8,7 +8,7 @@
  */
 
 import { agentLoop, type AgentTool, type AgentEvent } from "@kenkaiiii/gg-agent";
-import type { Message } from "@kenkaiiii/gg-ai";
+import type { Message, Provider } from "@kenkaiiii/gg-ai";
 import type { TwentyMCPClient } from "../twenty/client.js";
 import type { TwentyEvent, GGTwentyConfig, AgentResponse } from "../twenty/types.js";
 import { log } from "../twenty/logger.js";
@@ -103,9 +103,9 @@ export async function handleCompanyEvent(
   ];
 
   const model = config.fastModel ?? config.model ?? "openrouter/openai/gpt-4o-mini";
-  const [providerPart, modelPart] = model.split("/");
-  const provider = providerPart as "anthropic" | "openai" | "glm";
-  const modelId = modelPart ?? model;
+  const slashIdx = model.indexOf("/");
+  const provider = (slashIdx > 0 ? model.slice(0, slashIdx) : model) as Provider;
+  const modelId = slashIdx > 0 ? model.slice(slashIdx + 1) : model;
 
   try {
     const generator = agentLoop(messages, {
