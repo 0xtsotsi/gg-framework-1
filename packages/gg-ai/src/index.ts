@@ -1,5 +1,6 @@
 // Core entry point
 export { stream } from "./stream.js";
+export { streamOpenAI } from "./providers/openai.js";
 
 // Provider registry
 export { providerRegistry } from "./provider-registry.js";

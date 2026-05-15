@@ -4,6 +4,10 @@ import path from "node:path";
 import os from "node:os";
 import { createEditTool } from "./edit.js";
 
+function isStructuredResult(result: unknown): result is { details: { diff: string } } {
+  return typeof result === "object" && result !== null && "details" in result;
+}
+
 describe("createEditTool", () => {
   let tmpDir: string;
 
@@ -25,9 +29,12 @@ describe("createEditTool", () => {
       { signal: new AbortController().signal, toolCallId: "test-1" },
     );
 
-    expect(typeof result).toBe("string");
-    expect(result).toContain("-hello world");
-    expect(result).toContain("+goodbye world");
+    expect(result).toHaveProperty("content");
+    expect(isStructuredResult(result)).toBe(true);
+    if (isStructuredResult(result)) {
+      expect(result.details.diff).toContain("-hello world");
+      expect(result.details.diff).toContain("+goodbye world");
+    }
 
     const written = await fs.readFile(filePath, "utf-8");
     expect(written).toBe("goodbye world\n");
@@ -79,8 +86,11 @@ describe("createEditTool", () => {
       { signal: new AbortController().signal, toolCallId: "test-4" },
     );
 
-    expect(result).toContain("-alpha beta");
-    expect(result).toContain("+gamma beta");
+    expect(isStructuredResult(result)).toBe(true);
+    if (isStructuredResult(result)) {
+      expect(result.details.diff).toContain("-alpha beta");
+      expect(result.details.diff).toContain("+gamma beta");
+    }
 
     const written = await fs.readFile(filePath, "utf-8");
     expect(written).toBe("gamma beta\n");
@@ -130,8 +140,10 @@ describe("createEditTool", () => {
       { signal: new AbortController().signal, toolCallId: "test-7" },
     );
 
-    expect(typeof result).toBe("string");
-    expect(result).toContain("+const msg = 'goodbye';");
+    expect(isStructuredResult(result)).toBe(true);
+    if (isStructuredResult(result)) {
+      expect(result.details.diff).toContain("+const msg = 'goodbye';");
+    }
 
     const written = await fs.readFile(filePath, "utf-8");
     expect(written).toContain("goodbye");
@@ -147,7 +159,10 @@ describe("createEditTool", () => {
       { signal: new AbortController().signal, toolCallId: "test-8" },
     );
 
-    expect(result).toContain("+line TWO");
+    expect(isStructuredResult(result)).toBe(true);
+    if (isStructuredResult(result)) {
+      expect(result.details.diff).toContain("+line TWO");
+    }
 
     const written = await fs.readFile(filePath, "utf-8");
     expect(written).toBe("line one\r\nline TWO\r\nline three\r\n");

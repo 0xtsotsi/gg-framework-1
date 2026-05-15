@@ -89,6 +89,8 @@ export interface SessionInfo {
   timestamp: string;
   cwd: string;
   messageCount: number;
+  model: string;
+  provider: string;
 }
 
 // ── Branch Info ───────────────────────────────────────────
@@ -261,6 +263,8 @@ export class SessionManager {
           timestamp: first.timestamp,
           cwd: first.cwd,
           messageCount,
+          model: first.model,
+          provider: first.provider,
         });
       } catch {
         // Skip corrupt files
@@ -456,9 +460,13 @@ export class SessionManager {
       const branch = this.getBranch(entries, leaf.id, byId);
 
       let branchPointId = branch[0]?.id ?? leaf.id;
-      for (const e of branch) {
+      // Iterate in reverse (leaf → root) to find the first node with a shared parent
+      for (let i = branch.length - 1; i >= 0; i--) {
+        const e = branch[i]!;
+        // If this node's parent has multiple children, that's the branch point
         if ((childCount.get(e.parentId) ?? 0) > 1) {
-          branchPointId = e.id;
+          // Root has null parentId — use e.id directly; otherwise use parent's id
+          branchPointId = e.parentId === null ? e.id : e.parentId;
           break;
         }
       }

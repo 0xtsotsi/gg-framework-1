@@ -77,6 +77,9 @@ export function shouldCompact(
 export function findRecentCutPoint(messages: Message[], tokenBudget: number): number {
   if (messages.length <= 1) return messages.length;
 
+  // Zero budget means nothing fits — keep all messages
+  if (tokenBudget <= 0) return messages.length;
+
   let accumulated = 0;
   let cutIndex = messages.length;
 

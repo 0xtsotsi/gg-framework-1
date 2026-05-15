@@ -1,0 +1,41 @@
+{
+  "name": "@kenkaiiii/gg-twenty",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Twenty CRM → ggcoder/gg-agent event bridge with agentic responsiveness",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kenkaiiii/gg-framework.git",
+    "directory": "packages/gg-twenty"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "dev": "bun run src/cli.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kenkaiiii/gg-agent": "workspace:*",
+    "@kenkaiiii/gg-ai": "workspace:*",
+    "@kenkaiiii/ggcoder": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "cron-scheduler": "^1.2.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  },
+  "peerDependencies": {
+    "@kenkaiiii/gg-ai": "workspace:*"
+  }
+}

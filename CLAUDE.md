@@ -196,3 +196,45 @@ To add a new registry command:
 | Both UI + session access | `App.tsx` (can call session methods via props) |
 
 There is also support for **prompt-template commands** (built-in from `core/prompt-commands.ts` and custom from `.gg/commands/` directory).
+## Eyes
+
+Perception probes live in `.gg/eyes/`. All headless. Artifacts → `.gg/eyes/out/` (gitignored). Invoke probes yourself; don't ask the user to verify what you can verify.
+
+### Available probes
+
+| Need | Run | Then |
+|---|---|---|
+| HTTP API / webhook verification | `.gg/eyes/http.sh <url> [method] [body]` | Read JSON output: status, size, time_ms, headers path, body path |
+| CLI / server log tailing | `.gg/eyes/logs.sh <file> [--follow]` | Watch live output for errors/warnings |
+
+### When to use these eyes (automatically, without being asked)
+
+Reach for probes ON YOUR OWN INITIATIVE when any of these apply:
+
+- **After editing any provider in `packages/gg-ai/src/providers/`**: Run `pnpm --filter @kenkaiiii/gg-ai test` and tail the output with `.gg/eyes/logs.sh`. Confirm no unhandled promise rejections or SDK errors.
+- **After adding a new API endpoint or RPC handler**: Hit it with `.gg/eyes/http.sh http://localhost:PORT/path` and confirm the response shape matches the expected `StreamResult` or `AgentEvent` types.
+- **After modifying the OAuth flows in `packages/ggcoder/src/core/oauth/`**: Use `logs.sh` to watch `~/.gg/debug.log` for auth state transitions.
+- **After changing the CLI UI in `packages/ggcoder/src/ui/`**: Run `pnpm --filter @kenkaiiii/ggcoder test` and confirm no render/escape regressions.
+- **After any change that could affect build output**: Run `pnpm build` and check for TypeScript errors in the output.
+
+### When NOT to use
+
+- Docs-only changes, comments, formatting.
+- Refactors covered by passing tests.
+- Dev server isn't running AND the task doesn't require runtime verification.
+- Same probe already ran this turn on the same artifact — reuse the output.
+
+### When to escalate a capability gap (the self-improvement loop)
+
+If you're about to **guess**, **skip verification**, or **hand-wave** about something a better probe would show you — STOP and surface the tradeoff inline. Phrasing like:
+
+> "I tried verifying but the failure is a TypeScript error I can only diagnose with type-check output. Two paths: (a) Run `pnpm check` and share results. (b) Proceed with the likely fix. Your call?"
+
+Wait for the user's choice. **Don't escalate more than once per request** — if the user picked the workaround, don't re-ask in the same turn.
+
+For minor friction (worked around it but wished it were better), don't interrupt — log it for later review:
+- `ggcoder eyes log rough "<reason>" [--probe <name>]` — minor friction, you handled it
+- `ggcoder eyes log wish "<gap>"` — capability you wished existed
+- `ggcoder eyes log blocked "<reason>"` — call this AFTER the user approves an inline-escalation fix, for the audit trail
+
+These accumulate quietly. The user reviews them periodically. Open signals will appear in my context on future turns until they're acked.

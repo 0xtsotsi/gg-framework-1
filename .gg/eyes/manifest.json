@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "probes": [
+    {
+      "name": "http",
+      "capability": "http",
+      "impl": "curl",
+      "script": ".gg/eyes/http.sh",
+      "status": "verified"
+    },
+    {
+      "name": "logs",
+      "capability": "runtime_logs",
+      "impl": "tail",
+      "script": ".gg/eyes/logs.sh",
+      "status": "verified"
+    },
+    {
+      "name": "visual",
+      "capability": "visual",
+      "impl": "generic",
+      "script": ".gg/eyes/visual.sh",
+      "status": "verified"
+    }
+  ]
+}
