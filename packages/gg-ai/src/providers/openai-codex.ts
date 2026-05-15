@@ -44,8 +44,16 @@ async function* runStream(options: StreamOptions): AsyncGenerator<StreamEvent, S
   if (options.tools?.length) {
     body.tools = toCodexTools(options.tools);
   }
-  if (options.promptCacheKey) {
-    body.prompt_cache_key = options.promptCacheKey;
+  // Always set a prompt_cache_key. OpenAI uses this key to route requests
+  // with the same prefix to the same cache shard — without it, the codex
+  // backend hashes only the request body, so cache hits for shared
+  // system+tool prefixes across separate sub-agent processes are accidental
+  // rather than guaranteed.
+  body.prompt_cache_key = options.promptCacheKey ?? "ggcoder";
+  // Map cacheRetention to OpenAI's prompt_cache_retention. "long" pins the
+  // cached prefix for up to 24h (vs the default 5–10 min in-memory window).
+  if (options.cacheRetention === "long") {
+    body.prompt_cache_retention = "24h";
   }
   if (options.temperature != null && !options.thinking) {
     body.temperature = options.temperature;
@@ -68,6 +76,17 @@ async function* runStream(options: StreamOptions): AsyncGenerator<StreamEvent, S
 
   if (options.accountId) {
     headers["chatgpt-account-id"] = options.accountId;
+  }
+
+  // The chatgpt.com codex backend routes prompt cache lookups by header, not
+  // body — `prompt_cache_key` in the body alone never produces a cache hit
+  // here (verified against gpt-5.5 with a 22k-token shared prefix). Pinning
+  // both `session_id` and `x-client-request-id` to the cache scope is what
+  // makes consecutive requests hit the same cache shard.
+  const cacheScopeId = body.prompt_cache_key as string | undefined;
+  if (cacheScopeId) {
+    headers["session_id"] = cacheScopeId;
+    headers["x-client-request-id"] = cacheScopeId;
   }
 
   const response = await fetch(url, {

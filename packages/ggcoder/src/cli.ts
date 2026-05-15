@@ -362,6 +362,7 @@ function main(): void {
       model: { type: "string" },
       "max-turns": { type: "string" },
       "system-prompt": { type: "string" },
+      "prompt-cache-key": { type: "string" },
     },
     allowPositionals: true,
     strict: true,
@@ -384,6 +385,7 @@ function main(): void {
     const jsonModel = values.model ?? "claude-opus-4-7";
     const maxTurns = values["max-turns"] ? parseInt(values["max-turns"], 10) : undefined;
     const systemPrompt = values["system-prompt"];
+    const promptCacheKey = values["prompt-cache-key"];
     const cwd = process.cwd();
     runJsonMode({
       message,
@@ -392,6 +394,7 @@ function main(): void {
       cwd,
       systemPrompt,
       maxTurns,
+      promptCacheKey,
     }).catch((err: unknown) => {
       process.stderr.write(formatUserError(err) + "\n");
       process.exit(1);

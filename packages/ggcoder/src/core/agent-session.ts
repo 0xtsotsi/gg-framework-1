@@ -44,6 +44,13 @@ export interface AgentSessionOptions {
   /** Prefix used for provider prompt-cache routing keys. */
   promptCacheKeyPrefix?: string;
   /**
+   * Explicit prompt-cache routing key. When set, overrides the
+   * `${promptCacheKeyPrefix}:${sessionId}` default so spawned sub-agents can
+   * inherit a stable parent-scoped key — without this, each sub-agent process
+   * generates a fresh sessionId and starts with a cold cache.
+   */
+  promptCacheKey?: string;
+  /**
    * If true, this session does NOT create a `.jsonl` session file or persist
    * any messages. Used by subagent spawns (`--json` mode) so their transcripts
    * don't leak into `ggcoder continue` for the parent project. Subagent runs
@@ -78,6 +85,7 @@ export class AgentSession {
   private messages: Message[] = [];
   private tools: AgentTool[] = [];
   private skills: Skill[] = [];
+  private cacheKeyLogged = false;
   private processManager?: ProcessManager;
   private mcpManager?: MCPClientManager;
 
@@ -150,6 +158,9 @@ export class AgentSession {
       skills: this.skills,
       provider: this.provider,
       model: this.model,
+      // Lazy — sessionId isn't assigned yet when createTools() runs, so we
+      // must defer reading the cache key until the sub-agent actually fires.
+      getCacheKey: () => this.getPromptCacheKey(),
     });
     this.tools = tools;
     this.processManager = processManager;
@@ -298,6 +309,19 @@ export class AgentSession {
 
   /** Auto-compact if needed, run agent loop with auth retry, and persist messages. */
   private async runLoop(): Promise<void> {
+    // One-shot cache-key marker per session so turn_end cacheRead numbers
+    // in the log can be traced back to a specific routing namespace —
+    // particularly useful when sub-agents inherit `parentKey:subagent`.
+    if (!this.cacheKeyLogged) {
+      this.cacheKeyLogged = true;
+      log("INFO", "cache", "Session cache key", {
+        provider: this.provider,
+        model: this.model,
+        key: this.getPromptCacheKey() ?? "(none)",
+        transient: String(!!this.opts.transient),
+      });
+    }
+
     // Auto-compact if needed
     if (this.settingsManager.get("autoCompact")) {
       const contextWindow = getContextWindow(this.model);
@@ -549,8 +573,14 @@ export class AgentSession {
   }
 
   private getPromptCacheKey(): string | undefined {
+    if (this.opts.promptCacheKey) return this.opts.promptCacheKey;
     if (!this.sessionId) return undefined;
     return `${this.opts.promptCacheKeyPrefix ?? "ggcoder"}:${this.sessionId}`;
+  }
+
+  /** Stable cache-routing key for downstream sub-agent processes. */
+  getCurrentCacheKey(): string | undefined {
+    return this.getPromptCacheKey();
   }
 
   async dispose(): Promise<void> {

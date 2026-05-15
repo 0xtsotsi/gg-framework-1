@@ -164,11 +164,21 @@ async function* runStream(options: StreamOptions): AsyncGenerator<StreamEvent, S
       if (details?.cached_tokens) {
         cacheRead = details.cached_tokens;
       }
-      // Kimi K2/K2.5 reports cached_tokens at the top level of usage
-      // rather than nested under prompt_tokens_details.
+      // Vendor-specific cache reporting fields:
+      // - Kimi K2/K2.5 / StepFun: top-level `cached_tokens`
+      // - DeepSeek / SiliconFlow: `prompt_cache_hit_tokens`
+      // OpenAI / Zhipu (GLM) / MiniMax / Qwen / Mistral / xAI all use the
+      // standard `prompt_tokens_details.cached_tokens` handled above.
       const usageAny = chunk.usage as unknown as Record<string, unknown>;
       if (!cacheRead && typeof usageAny.cached_tokens === "number" && usageAny.cached_tokens > 0) {
         cacheRead = usageAny.cached_tokens as number;
+      }
+      if (
+        !cacheRead &&
+        typeof usageAny.prompt_cache_hit_tokens === "number" &&
+        usageAny.prompt_cache_hit_tokens > 0
+      ) {
+        cacheRead = usageAny.prompt_cache_hit_tokens as number;
       }
       // OpenAI's prompt_tokens includes cached tokens; subtract to match
       // Anthropic's convention where inputTokens excludes cache hits.
@@ -394,6 +404,13 @@ function completionToResponse(completion: OpenAI.ChatCompletion): StreamResponse
     const usageAny = completion.usage as unknown as Record<string, unknown>;
     if (!cacheRead && typeof usageAny.cached_tokens === "number" && usageAny.cached_tokens > 0) {
       cacheRead = usageAny.cached_tokens as number;
+    }
+    if (
+      !cacheRead &&
+      typeof usageAny.prompt_cache_hit_tokens === "number" &&
+      usageAny.prompt_cache_hit_tokens > 0
+    ) {
+      cacheRead = usageAny.prompt_cache_hit_tokens as number;
     }
     inputTokens = completion.usage.prompt_tokens - cacheRead;
   }
